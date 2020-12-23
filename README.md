@@ -1,24 +1,8 @@
-# leyao
+# 前端学习实例
 
-## Project setup
-```
-npm install
-```
+## demo列表
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+- Vue自定义指令
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## 示例预览
+戳[示例预览](http://demo.lexinyao.com/leyao).

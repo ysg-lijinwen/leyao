@@ -3,6 +3,63 @@
     <div class="node-info">
       使用指令时，指令参数如果时函数，只能传入函数名，不可带括号，否则会立即执行函数体。
     </div>
+    <div class="doc-info">
+      一个指令定义对象可以提供如下几个钩子函数 (均为可选)：
+      <ul>
+        <li>
+          bind：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。
+        </li>
+        <li>
+          inserted：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
+        </li>
+        <li>
+          update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新 (详细的钩子函数参数见下)。
+        </li>
+        <li>
+          componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用。
+        </li>
+        <li>
+          unbind：只调用一次，指令与元素解绑时调用。
+        </li>
+      </ul>
+    </div>
+    <div class="doc-info">
+      指令钩子函数会被传入以下参数：
+      <ul>
+        <li>
+          el：指令所绑定的元素，可以用来直接操作 DOM 。
+        </li>
+        <li>
+          binding：一个对象，包含以下属性：
+          <ul>
+            <li>
+              name：指令名，不包括 v- 前缀。
+            </li>
+            <li>
+              value：指令的绑定值，例如：v-my-directive="1 + 1" 中，绑定值为 2。
+            </li>
+            <li>
+              oldValue：指令绑定的前一个值，仅在 update 和 componentUpdated 钩子中可用。无论值是否改变都可用。
+            </li>
+            <li>
+              expression：字符串形式的指令表达式。例如 v-my-directive="1 + 1" 中，表达式为 "1 + 1"。
+            </li>
+            <li>
+              arg：传给指令的参数，可选。例如 v-my-directive:foo 中，参数为 "foo"。
+            </li>
+            <li>
+              modifiers：一个包含修饰符的对象。例如：v-my-directive.foo.bar 中，修饰符对象为 { foo: true, bar: true }。
+            </li>
+          </ul>
+        </li>
+        <li>
+          vnode：Vue 编译生成的虚拟节点。移步 VNode API 来了解更多详情。
+        </li>
+        <li>
+          oldVnode：上一个虚拟节点，仅在 update 和 componentUpdated 钩子中可用
+        </li>
+      </ul>
+    </div>
     <div>
       复制内容：<br>
       <button v-copy="copyText">指定绑定对象的value为一个对象</button>
@@ -26,6 +83,7 @@
       <!--    自定义验证规则-->
       <input placeholder="输入表情之外的文字" type="text" v-model="note2" v-emoji/>
     </div>
+    <br>
     <div>
       权限判断：<br>
       <!-- 显示 -->
@@ -33,8 +91,17 @@
       <!-- 不显示 -->
       <button v-permission="'10'">权限按钮2</button>
     </div>
-    <!--    more-operations-->
+    <br>
+    <div>
+      日期格式化:
+      <div v-timeFormat:red="timeStamp"></div>
+      <div v-timeFormat:orange.date="timeStamp"></div>
+      <div v-timeFormat:orange.datetime="timeStamp"></div>
+    </div>
+    <br>
+    <!--  任意拖动控件的指令  -->
     <div class="more-operations" v-draggable>任意拖动</div>
+    <br>
     <div>
       图片懒加载：<br>
       <div class="img-layer" v-for="(item, index) in imgSrc" :key="index">
@@ -64,6 +131,7 @@ export default {
       copyText2: 'a copy directives222',
       note: '',
       note2: '',
+      timeStamp: 1335562531231,
       imgSrc: [
         "http://img.lexinyao.com/1.jpeg",
         "http://img.lexinyao.com/2.jpeg",
@@ -94,10 +162,21 @@ export default {
 }
 
 .node-info {
+  padding: 0 15%;
+  text-align: left;
   color: crimson;
   margin-top: 10px;
   margin-bottom: 10px;
   border-bottom: dotted brown 1px;
+}
+
+.doc-info {
+  padding: 0 15%;
+  text-align: left;
+  color: black;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-bottom: dotted gray 1px;
 }
 
 .img-layer {
@@ -105,7 +184,7 @@ export default {
 }
 
 .lazy-load-img {
-  width: 80%;
+  width: 70%;
   height: 500px;
   object-fit: fill;
 }
