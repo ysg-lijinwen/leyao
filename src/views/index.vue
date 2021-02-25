@@ -3,6 +3,8 @@
     <div class="demo-row">
       <!-- 使用指令时，指令参数如果时函数，只能传入函数名，不可带括号，否则会立即执行函数体。 -->
       <button v-debounce="goToCustomDirectDemo">自定义指令Demo</button>
+      <br>
+      <button style="margin-top: 20px;" v-debounce="goToFullScreenDemo">实现进入全屏</button>
     </div>
     <div class="more-operations" v-draggable>
       <a :href="'https://github.com/ysg-lijinwen/leyao'" target="_blank">示例代码</a>
@@ -29,6 +31,9 @@ export default {
     },
     goToCustomDirectDemo() {
       this.goToNextPage('/customDirect')
+    },
+    goToFullScreenDemo() {
+      this.goToNextPage('/fullScreen')
     },
   }
 }

@@ -14,6 +14,11 @@ const routes = [
     path: '/customDirect',
     name: 'CustomDirectDemo',
     component: () => import('../views/custom-direct-demo.vue')
+  },
+  {
+    path: '/fullScreen',
+    name: 'FullScreenDemo',
+    component: () => import('../views/full-screen-demo.vue')
   }
 ]
 

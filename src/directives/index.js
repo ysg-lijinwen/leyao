@@ -4,7 +4,7 @@ import debounce from "@/directives/debounce";
 import emoji from '@/directives/emoji'
 import permission from "@/directives/premission";
 // import LazyLoad from "@/directives/lazy-load";
-import imageLazyLoad from "@/directives/image";
+import imageLazyLoad from "@/directives/image-lazy-load";
 import waterMarker from "@/directives/water-marker";
 import draggable from "@/directives/draggable";
 import timeFormat from "@/directives/time-format";

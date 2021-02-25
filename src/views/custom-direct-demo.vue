@@ -13,7 +13,8 @@
           inserted：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
         </li>
         <li>
-          update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新 (详细的钩子函数参数见下)。
+          update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新
+          (详细的钩子函数参数见下)。
         </li>
         <li>
           componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用。
@@ -79,9 +80,9 @@
     <br>
     <div>
       输入过滤：（默认规则为过滤表情）<br>
-      <input placeholder="只能输入数字" type="text" v-model="note" v-emoji="/\D/g"/>
+      <input placeholder="只能输入数字" type="text" v-model="note" v-emoji="/\D/g" />
       <!--    自定义验证规则-->
-      <input placeholder="输入表情之外的文字" type="text" v-model="note2" v-emoji/>
+      <input placeholder="输入表情之外的文字" type="text" v-model="note2" v-emoji />
     </div>
     <br>
     <div>
@@ -105,18 +106,21 @@
     <div>
       图片懒加载：<br>
       <div class="img-layer" v-for="(item, index) in imgSrc" :key="index">
-        <img class="lazy-load-img" v-imageLazyLoad="item"/>
+        <img class="lazy-load-img" :class="setImgId(index)" v-imageLazyLoad="item" />
+        <br>
+        <button type="button" @click="toggle1(index)">全屏查看</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-
+// import FullScreen from '../components/full-screen/FullScreen.vue'
+import fullScreenService from '../components/full-screen/service.js'
 export default {
   name: "CustomDirectDemo",
-  components: {},
-  data() {
+  // components: { FullScreen },
+  data () {
     return {
       copyText: {
         content: 'A new content!',
@@ -141,16 +145,32 @@ export default {
         "http://img.lexinyao.com/6.jpeg",
         "http://img.lexinyao.com/7.jpeg",
       ],
+      fullscreen: false
     }
   },
-  mounted() {
+  mounted () {
   },
   methods: {
-    longPress() {
+    longPress () {
       alert('长按指令生效')
     },
-    debounceClick() {
+    debounceClick () {
       console.log('只触发一次')
+    },
+    setImgId (index) {
+      return 'img-' + index
+    },
+    toggle () {
+      this.$refs['fullscreen'].toggle() // recommended
+    },
+    toggle1 (index) {
+      fullScreenService.toggle(this.$el.querySelector('.img-' + index), {
+        wrap: false,
+        callback: this.fullscreenChange
+      })
+    },
+    fullscreenChange (fullscreen) {
+      this.fullscreen = fullscreen
     }
   }
 }
@@ -181,6 +201,7 @@ export default {
 
 .img-layer {
   background-color: rgba(180, 180, 180, 0.1);
+  margin-top: 20px;
 }
 
 .lazy-load-img {
