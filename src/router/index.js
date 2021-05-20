@@ -1,3 +1,13 @@
+/*
+ * @Description:
+ * @Version: 1.0.0
+ * @Author: Kevin.Lee
+ * @Date: 2020-12-22 21:04:59
+ * @LastEditors: Kevin.Lee
+ * @LastEditTime: 2021-05-19 22:07:45
+ * @FilePath: /cx/Users/lijinwen/study-p/vue-demo/leyao/src/router/index.js
+ * Copyright (C) 2021 Kevin.Lee. All rights reserved.
+ */
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
@@ -19,6 +29,11 @@ const routes = [
     path: '/fullScreen',
     name: 'FullScreenDemo',
     component: () => import('../views/full-screen-demo.vue')
+  },
+  {
+    path: '/region',
+    name: 'RegionDemo',
+    component: () => import('../views/region-demo.vue')
   }
 ]
 

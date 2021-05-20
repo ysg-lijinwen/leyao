@@ -1,3 +1,13 @@
+<!--
+ * @Description:
+ * @Version: 1.0.0
+ * @Author: Kevin.Lee
+ * @Date: 2020-12-07 10:32:41
+ * @LastEditors: Kevin.Lee
+ * @LastEditTime: 2021-05-19 22:07:37
+ * @FilePath: /cx/Users/lijinwen/study-p/vue-demo/leyao/src/views/index.vue
+ * Copyright (C) 2021 Kevin.Lee. All rights reserved.
+-->
 <template>
   <div class="base-layer" v-waterMarker="{text:'乐心瑶版权所有',textColor:'rgba(180, 180, 180, 0.4)'}">
     <div class="demo-row">
@@ -5,6 +15,8 @@
       <button v-debounce="goToCustomDirectDemo">自定义指令Demo</button>
       <br>
       <button style="margin-top: 20px;" v-debounce="goToFullScreenDemo">实现进入全屏</button>
+      <br>
+      <button style="margin-top: 20px;" v-debounce="goToRegionDemo">行政区域</button>
     </div>
     <div class="more-operations" v-draggable>
       <a :href="'https://github.com/ysg-lijinwen/leyao'" target="_blank">示例代码</a>
@@ -17,24 +29,27 @@
 export default {
   name: "index",
   components: {},
-  data() {
+  data () {
     return {}
   },
-  mounted() {
+  mounted () {
   },
   methods: {
-    goToNextPage(path, params) {
+    goToNextPage (path, params) {
       return this.$router.push({
         path: path,
         query: params
       })
     },
-    goToCustomDirectDemo() {
+    goToCustomDirectDemo () {
       this.goToNextPage('/customDirect')
     },
-    goToFullScreenDemo() {
+    goToFullScreenDemo () {
       this.goToNextPage('/fullScreen')
     },
+    goToRegionDemo () {
+      this.goToNextPage('/region')
+    }
   }
 }
 </script>
