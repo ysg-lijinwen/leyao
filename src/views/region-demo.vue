@@ -4,7 +4,7 @@
  * @Author: Kevin.Lee
  * @Date: 2021-05-19 21:39:40
  * @LastEditors: Kevin.Lee
- * @LastEditTime: 2021-05-20 13:00:15
+ * @LastEditTime: 2021-05-20 20:33:33
  * @FilePath: /cx/Users/lijinwen/study-p/vue-demo/leyao/src/views/region-demo.vue
  * Copyright (C) 2021 Kevin.Lee. All rights reserved.
 -->
@@ -12,23 +12,43 @@
   <div class="base-layout">
     <div class="operation-btn-layout">
       <el-button type="primary" v-debounce="getRegionOrgData">获取原始数据，并处理</el-button>
-      <el-button type="primary" v-debounce="printTreeData">打印省市区树状结构数据</el-button>
+      <el-button type="primary" v-debounce="printTreeData">打印省市区树结构数据</el-button>
       <el-button type="primary" v-debounce="getTownshipStreetFiles">获取县级行政区划对应的乡镇区划文件列表</el-button>
       <el-button type="primary" v-debounce="checkData">看看缺少那些县城</el-button>
       <el-button type="primary" v-debounce="testTool">测试工具</el-button>
+      <el-button type="primary" v-debounce="compareData">比较regionList和regionOrgJson，看看少了哪些数据
+      </el-button>
     </div>
     <div class="show-data-layout">
-      <div class="tree-data-area">
-        <el-tree :data="treeData" :props="treeProps" @node-click="handleNodeClick"></el-tree>
-        <div>
-          {{ getCountyFileData }}
+      <div class="area-title-layout">
+        <span class="area-title">全国行政区划区域树</span>
+        <div class="tree-data-area">
+          <el-tree :data="treeData" :props="treeProps" @node-click="handleNodeClick"
+            :accordion="true"></el-tree>
+          <div>
+            {{ getCountyFileData }}
+          </div>
         </div>
       </div>
-      <div class="cascader-data-area">
-        <el-cascader-panel :options="treeData" :props="cascaderPanelProps"></el-cascader-panel>
-        <el-cascader :options="treeData" :props="cascaderProps" @change="handleChange"
-          style="margin-top: 10px;">
-        </el-cascader>
+      <div class="area-title-layout">
+        <span class="area-title">省级行政区划直辖的县级行政区划(含直辖市下的县区)</span>
+        <div class="tree-data-area">
+          <el-tree :data="countyLevelCities" :props="treeProps" @node-click="handleNodeClick2"
+            :accordion="true">
+          </el-tree>
+          <div>
+            {{ getCountyFileData2 }}
+          </div>
+        </div>
+      </div>
+      <div class="area-title-layout">
+        <span class="area-title">行政区划选择</span>
+        <div class="cascader-data-area">
+          <el-cascader-panel :options="treeData" :props="cascaderPanelProps"></el-cascader-panel>
+          <el-cascader :options="treeData" :props="cascaderProps" @change="handleChange"
+            style="margin-top: 10px;">
+          </el-cascader>
+        </div>
       </div>
     </div>
   </div>
@@ -36,18 +56,22 @@
 <script>
 import regionOrgJson from '../assets/region/list.json'
 import region3Level from '../assets/region/tree/region3level.json'
+import countyLevelCity from '../assets/region/tree/county-level-city.json' // 省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共计个-树结构
 export default {
   components: {
   },
   data () {
     return {
       fullscreen: false,
+      regionList: [],
       provinces: [], // 目前中国有34个省级行政区，即4个直辖市、23个省、5个自治区、2个特别行政区
       cities: [],
       counties: [],
       // specialHandlingCode: ['11','12','31','50','71','81','82','83'] // ‘71’是台湾省，‘83’是台湾特别行政区，目前国标上是‘71’，但是实际使用基本都使用的‘83’，估计以后会修改国标。本应用中的数据也是‘83’。
-      specialHandlingCode: ['11', '12', '31', '50', '81', '82'],// 北京市、天津市、上海市、重庆市、香港特别行政区和澳门特别行政区，这几个只有两级，没有地级行政区划，直接就到县级行政区划，需要特殊处理。
-      treeData: region3Level,
+      // specialHandlingCode: ['11', '12', '31', '50', '81', '82'],// 北京市、天津市、上海市、重庆市、香港特别行政区和澳门特别行政区，这几个只有两级，没有地级行政区划，直接就到县级行政区划，需要特殊处理。
+      countyLevelCity: [], // 省直辖县级市
+      treeData: region3Level,// 全国省市县树结构数据
+      countyLevelCities: countyLevelCity, // 省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共计个-树结构
       treeProps: {
         children: 'children',
         label: 'name'
@@ -67,7 +91,8 @@ export default {
       },
       countyFiles: null,
       countyFileNames: [],
-      countyFileData: null
+      countyFileData: null,
+      countyFileData2: null
     }
   },
   computed: {
@@ -76,6 +101,9 @@ export default {
     },
     getCountyFileData: function () {
       return this.countyFileData ? JSON.stringify(this.countyFileData) : '没有乡镇数据'
+    },
+    getCountyFileData2: function () {
+      return this.countyFileData2 ? JSON.stringify(this.countyFileData2) : '没有乡镇数据'
     }
   },
   methods: {
@@ -96,6 +124,19 @@ export default {
       } else {
         console.log('没有乡镇数据')
         this.countyFileData = null
+      }
+    },
+    handleNodeClick2 (data) {
+      if (!this.countyFiles || this.countyFileNames.length === 0) {
+        this.getTownshipStreetFiles()
+      }
+      if (this.countyFileNames.includes(data.code)) {
+        let key = `./${data.code}.json`
+        // console.log(this.countyFiles(key))
+        this.countyFileData2 = this.countyFiles(key)
+      } else {
+        console.log('没有乡镇数据')
+        this.countyFileData2 = null
       }
     },
     handleChange (value) {
@@ -136,12 +177,13 @@ export default {
       console.log(JSON.stringify(region3Level))
     },
     getRegionOrgData () {
+      this.regionList = []
       this.provinces = []
       this.cities = []
       this.counties = []
       // console.log(JSON.stringify(regionOrgJson))
       const keys = Object.keys(regionOrgJson)
-      console.log(`数据总长：${keys.length}`)
+      console.log(`原始数据总长：${keys.length}`)
       for (let index = 0, length = keys.length; index < length; index++) {
         const key = keys[index]
         if (key.lastIndexOf('0000') === 2) { // 注意不能紧紧匹配是否存在‘0000’，因为可能出现在中间比如重庆市500000
@@ -170,22 +212,91 @@ export default {
       // console.log(JSON.stringify(this.counties))
       // console.log(this.counties.length)
       // console.log(JSON.stringify(this.counties))
-      // console.log(this.provinces.length + this.cities.length + this.counties.length)
+      console.log(`省市县三级数据条数：${this.provinces.length + this.cities.length + this.counties.length}`)
+      // 已有归属的县区
+      let ascriptionedCountyList = []
       // 组织为树结构数据
       for (let index = 0, length = this.cities.length; index < length; index++) {
         const childrenCounties = this.counties.filter(county => county.code.substr(0, 4) === this.cities[index].code.substr(0, 4))
         this.cities[index]['children'] = childrenCounties
+        ascriptionedCountyList = ascriptionedCountyList.concat(childrenCounties)
       }
+      // 设置省级数据
       for (let index = 0, length = this.provinces.length; index < length; index++) {
-        if (this.specialHandlingCode.includes(this.provinces[index].code.substr(0, 2))) {
-          const childrenCounties = this.counties.filter(county => county.code.substr(0, 2) === this.provinces[index].code.substr(0, 2))
-          this.provinces[index]['children'] = childrenCounties
-        } else {
-          const childrenCities = this.cities.filter(city => city.code.substr(0, 2) === this.provinces[index].code.substr(0, 2))
-          this.provinces[index]['children'] = childrenCities
+        /** 没必要在此处处理，而是放到处理未归属的县区时一并处理 */
+        // if (this.specialHandlingCode.includes(this.provinces[index].code.substr(0, 2))) { // 处理直辖市数据
+        //   const childrenCounties = this.counties.filter(county => county.code.substr(0, 2) === this.provinces[index].code.substr(0, 2))
+        //   this.provinces[index]['children'] = childrenCounties
+        //   ascriptionedCountyList = ascriptionedCountyList.concat(childrenCounties)
+        // } else {
+        //   const childrenCities = this.cities.filter(city => city.code.substr(0, 2) === this.provinces[index].code.substr(0, 2))
+        //   this.provinces[index]['children'] = childrenCities
+        // }
+        const childrenCities = this.cities.filter(city => city.code.substr(0, 2) === this.provinces[index].code.substr(0, 2))
+        this.provinces[index]['children'] = childrenCities
+      }
+      // 没有归属到地级市的县区（即，省直辖县级市）,直辖市下的区县数据也还未归属到直辖市下，此处统一处理
+      const unAscriptionedCountyList = this.counties.filter(county => !(ascriptionedCountyList.find(ac => ac.code === county.code)))
+      // 临时打印数据所用
+      const tempPrintData = []
+      // 将省直辖县级市挂到响应省级行政区划下
+      for (let index = 0, length = this.provinces.length; index < length; index++) {
+        const childrenCounties = unAscriptionedCountyList.filter(county => county.code.substr(0, 2) === this.provinces[index].code.substr(0, 2))
+        // this.provinces[index]['children'] = childrenCounties
+        if (childrenCounties && childrenCounties.length > 0) {
+          if (this.provinces[index].children) {
+            this.provinces[index].children = this.provinces[index].children.concat(childrenCounties)
+          } else {
+            this.provinces[index]['children'] = childrenCounties
+          }
+          tempPrintData.push({
+            code: this.provinces[index].code,
+            name: this.provinces[index].name,
+            children: childrenCounties
+          })
         }
       }
+      console.log(`省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共${unAscriptionedCountyList.length}个：${JSON.stringify(unAscriptionedCountyList)}`)
+      console.log(`省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共${unAscriptionedCountyList.length}个-树结构：${JSON.stringify(tempPrintData)}`)
       console.log(JSON.stringify(this.provinces))
+      this.getChildrenData(this.provinces, null)
+      console.log(`组装后的list长度：${this.regionList.length}`)
+      console.log(JSON.stringify(this.regionList))
+    },
+    getChildrenData (regionData, pCode) {
+      for (let index = 0, length = regionData.length; index < length; index++) {
+        const region = regionData[index]
+        this.regionList.push({
+          code: region.code,
+          name: region.name,
+          parentCode: pCode
+        })
+        if (region.children && region.children.length > 0) {
+          this.getChildrenData(region.children, region.code)
+        }
+      }
+    },
+    // 比较regionList和regionOrgJson，看看少了哪些数据
+    compareData () {
+      if (this.regionList.length === 0) {
+        this.getRegionOrgData()
+      }
+      const keys = Object.keys(regionOrgJson)
+      console.log(JSON.stringify(keys))
+      console.log('原始key数量：' + keys.length)
+      console.log('组装后长度：' + this.regionList.length)
+      // 返回regionList中没有的数据
+      const compareRes = keys.filter(key => !(this.regionList.find(region => region.code === key)))
+      console.log(compareRes.length)
+      const compareVo = []
+      for (let index = 0, length = compareRes.length; index < length; index++) {
+        const cr = compareRes[index]
+        compareVo.push({
+          code: cr,
+          name: regionOrgJson[cr]
+        })
+      }
+      console.log(JSON.stringify(compareVo))
     }
   }
 }
@@ -209,9 +320,23 @@ export default {
   flex-direction: row;
   margin-top: 5px;
 }
+.area-title-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.area-title {
+  width: 100%;
+  color: #070707;
+  font-weight: bold;
+  padding: 5px 0;
+  margin-bottom: 5px;
+  border-bottom: 1px dotted mediumaquamarine;
+}
 .tree-data-area {
   flex: 1;
   display: flex;
+  flex-direction: row;
 }
 .cascader-data-area {
   flex: 1;
