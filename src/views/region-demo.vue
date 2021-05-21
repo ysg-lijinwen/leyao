@@ -4,7 +4,7 @@
  * @Author: Kevin.Lee
  * @Date: 2021-05-19 21:39:40
  * @LastEditors: Kevin.Lee
- * @LastEditTime: 2021-05-20 20:33:33
+ * @LastEditTime: 2021-05-21 15:55:07
  * @FilePath: /cx/Users/lijinwen/study-p/vue-demo/leyao/src/views/region-demo.vue
  * Copyright (C) 2021 Kevin.Lee. All rights reserved.
 -->
@@ -18,6 +18,7 @@
       <el-button type="primary" v-debounce="testTool">测试工具</el-button>
       <el-button type="primary" v-debounce="compareData">比较regionList和regionOrgJson，看看少了哪些数据
       </el-button>
+      <el-button type="primary" v-debounce="createSqlInsert">生成sql插入语句</el-button>
     </div>
     <div class="show-data-layout">
       <div class="area-title-layout">
@@ -55,8 +56,11 @@
 </template>
 <script>
 import regionOrgJson from '../assets/region/list.json'
+import regiones from '../assets/region/list/regiones.json'
 import region3Level from '../assets/region/tree/region3level.json'
 import countyLevelCity from '../assets/region/tree/county-level-city.json' // 省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共计个-树结构
+import { saveAs } from 'file-saver';
+
 export default {
   components: {
   },
@@ -92,7 +96,9 @@ export default {
       countyFiles: null,
       countyFileNames: [],
       countyFileData: null,
-      countyFileData2: null
+      countyFileData2: null,
+      regionesList: regiones,
+      sqlTemplate: ''
     }
   },
   computed: {
@@ -107,6 +113,20 @@ export default {
     }
   },
   methods: {
+    createSqlInsert () {
+      console.log(this.regionesList.length)
+      this.sqlTemplate = ''
+      for (let index = 0, length = this.regionesList.length; index < length; index++) {
+        const vo = this.regionesList[index]
+        this.sqlTemplate = this.sqlTemplate + `INSERT INTO \`m_common_region\` (ID, PARENT_REGION_CODE, REGION_CODE, REGION_NAME) VALUES (${index + 1}, '${vo.parentCode ? vo.parentCode : ''}', '${vo.code}', '${vo.name}');`
+        if (index < length - 1) {
+          this.sqlTemplate = this.sqlTemplate + '\r\n'
+        }
+      }
+      const sqlRes = new Blob([this.sqlTemplate], { type: 'text/plain;charset=utf-8' })
+      saveAs(sqlRes, `region-insert.sql`)
+      console.log(this.sqlTemplate)
+    },
     testTool () {
       const str = '110000'
       const str1 = '112001'
