@@ -14,6 +14,8 @@ import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import router from "@/router";
 import directives from './directives'
+// import mock from './mock/index'
+// mock.init()
 
 Vue.use(ElementUI);
 Vue.use(directives)

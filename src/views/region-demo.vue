@@ -4,7 +4,7 @@
  * @Author: Kevin.Lee
  * @Date: 2021-05-19 21:39:40
  * @LastEditors: Kevin.Lee
- * @LastEditTime: 2021-05-21 15:55:07
+ * @LastEditTime: 2021-05-28 09:24:44
  * @FilePath: /cx/Users/lijinwen/study-p/vue-demo/leyao/src/views/region-demo.vue
  * Copyright (C) 2021 Kevin.Lee. All rights reserved.
 -->
@@ -18,7 +18,7 @@
       <el-button type="primary" v-debounce="testTool">测试工具</el-button>
       <el-button type="primary" v-debounce="compareData">比较regionList和regionOrgJson，看看少了哪些数据
       </el-button>
-      <el-button type="primary" v-debounce="createSqlInsert">生成sql插入语句</el-button>
+      <el-button type="primary" v-debounce="createSqlInsertFullPathUnID">生成sql插入语句</el-button>
     </div>
     <div class="show-data-layout">
       <div class="area-title-layout">
@@ -58,6 +58,8 @@
 import regionOrgJson from '../assets/region/list.json'
 import regiones from '../assets/region/list/regiones.json'
 import region3Level from '../assets/region/tree/region3level.json'
+// import regionTreeParentFullPath from '../assets/region/tree/region-tree-parent-fullPath.json'
+import regionTreeParentFullPathName from '../assets/region/tree/region-tree-parent-fullPath-name.json'
 import countyLevelCity from '../assets/region/tree/county-level-city.json' // 省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共计个-树结构
 import { saveAs } from 'file-saver';
 
@@ -113,6 +115,7 @@ export default {
     }
   },
   methods: {
+    /** 创建可直接插入数据库的sql语句，带父编码 */
     createSqlInsert () {
       console.log(this.regionesList.length)
       this.sqlTemplate = ''
@@ -126,6 +129,47 @@ export default {
       const sqlRes = new Blob([this.sqlTemplate], { type: 'text/plain;charset=utf-8' })
       saveAs(sqlRes, `region-insert.sql`)
       console.log(this.sqlTemplate)
+    },
+    //regionTreeParentFullPath
+    /** 创建可直接插入数据库的sql语句，数据带有父编码和全路径 */
+    createSqlInsertFullPath () {
+      this.sqlTemplate = ''
+      this.analysisChildren(regionTreeParentFullPathName)
+      const sqlRes = new Blob([this.sqlTemplate], { type: 'text/plain;charset=utf-8' })
+      saveAs(sqlRes, `region-insert-fullPath.sql`)
+      console.log(this.sqlTemplate)
+    },
+    analysisChildren (regionData) {
+      for (let index = 0, length = regionData.length; index < length; index++) {
+        const region = regionData[index]
+        this.sqlTemplate = this.sqlTemplate + `INSERT INTO \`m_common_region\` (ID, PARENT_REGION_CODE, REGION_CODE, REGION_NAME, FULL_PATH, FULL_NAME) VALUES (${index + 1}, '${region.parentCode ? region.parentCode : ''}', '${region.code}', '${region.name}', '${region.fullPath}', '${region.fullName}');`
+        this.sqlTemplate = this.sqlTemplate + '\r\n'
+        if (region.children && region.children.length > 0) {
+          this.getChildrenData(region.children)
+        }
+      }
+    },
+    /** 创建可直接插入数据库的sql语句，数据带有父编码和全路径，不带ID */
+    createSqlInsertFullPathUnID () {
+      this.sqlTemplate = ''
+      this.analysisChildren_2(regionTreeParentFullPathName)
+      // const lastEsIndex = this.sqlTemplate.lastIndexOf('\r\n')
+      // console.log(this.sqlTemplate.length)
+      // console.log(lastEsIndex)
+      // this.sqlTemplate = this.sqlTemplate.substring(0, lastEsIndex + 1)
+      const sqlRes = new Blob([this.sqlTemplate], { type: 'text/plain;charset=utf-8' })
+      saveAs(sqlRes, `region-insert-fullPath-name-unID.sql`)
+      console.log(this.sqlTemplate)
+    },
+    analysisChildren_2 (regionData) {
+      for (let index = 0, length = regionData.length; index < length; index++) {
+        const region = regionData[index]
+        this.sqlTemplate = this.sqlTemplate + `INSERT INTO \`m_common_region\` (PARENT_REGION_CODE, REGION_CODE, REGION_NAME, FULL_PATH, FULL_NAME) VALUES ('${region.parentCode ? region.parentCode : ''}', '${region.code}', '${region.name}', '${region.fullPath}', '${region.fullName}');`
+        this.sqlTemplate = this.sqlTemplate + '\r\n'
+        if (region.children && region.children.length > 0) {
+          this.analysisChildren_2(region.children)
+        }
+      }
     },
     testTool () {
       const str = '110000'
@@ -279,10 +323,17 @@ export default {
       console.log(`省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共${unAscriptionedCountyList.length}个：${JSON.stringify(unAscriptionedCountyList)}`)
       console.log(`省级行政区划直辖的县级行政区划(包含了直辖市下的县区行政区划)共${unAscriptionedCountyList.length}个-树结构：${JSON.stringify(tempPrintData)}`)
       console.log(JSON.stringify(this.provinces))
-      this.getChildrenData(this.provinces, null)
+      // this.getChildrenData(this.provinces, null)
+      // this.getChildrenDataFullPath(this.provinces, null)
+      this.getChildrenDataParentFullPathName(this.provinces, null, null, null)
       console.log(`组装后的list长度：${this.regionList.length}`)
       console.log(JSON.stringify(this.regionList))
+      const sqlRes = new Blob([JSON.stringify(this.regionList)], { type: 'text/plain;charset=utf-8' })
+      saveAs(sqlRes, `region-tree-parent-fullPath-name.json`)
     },
+    /** 获取拥有父级编码的树机构数据
+     * @param pCode 父级编码
+    */
     getChildrenData (regionData, pCode) {
       for (let index = 0, length = regionData.length; index < length; index++) {
         const region = regionData[index]
@@ -293,6 +344,43 @@ export default {
         })
         if (region.children && region.children.length > 0) {
           this.getChildrenData(region.children, region.code)
+        }
+      }
+    },
+    /** 获取拥有全路径的树机构数据
+     * @param pFullPath 父级全路径
+     */
+    getChildrenDataFullPath (regionData, pFullPath) {
+      console.log(pFullPath)
+      for (let index = 0, length = regionData.length; index < length; index++) {
+        const region = regionData[index]
+        this.regionList.push({
+          code: region.code,
+          name: region.name,
+          fullPath: pFullPath ? `${pFullPath}&${region.code}` : region.code
+        })
+        if (region.children && region.children.length > 0) {
+          this.getChildrenDataFullPath(region.children, pFullPath ? `${pFullPath}&${region.code}` : region.code)
+        }
+      }
+    },
+    /**
+     * 获取拥有全路径、全名称和父级编码的树结构数据
+     * @param pCode 父级编码
+     * @param pFullPath 父级全路径
+     */
+    getChildrenDataParentFullPathName (regionData, pCode, pFullPath, pFullName) {
+      for (let index = 0, length = regionData.length; index < length; index++) {
+        const region = regionData[index]
+        this.regionList.push({
+          code: region.code,
+          name: region.name,
+          parentCode: pCode,
+          fullPath: pFullPath ? `${pFullPath}&${region.code}` : region.code,
+          fullName: pFullName ? `${pFullName}&${region.name}` : region.name
+        })
+        if (region.children && region.children.length > 0) {
+          this.getChildrenDataParentFullPathName(region.children, region.code, pFullPath ? `${pFullPath}&${region.code}` : region.code, pFullName ? `${pFullName}&${region.name}` : region.name)
         }
       }
     },
