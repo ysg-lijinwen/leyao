@@ -1,10 +1,12 @@
 import { $fetch } from './apiFetch'
 const baseUrlConfig = {
   ljw: 'http://localhost:3066',
+  aly: 'http://47.108.165.186:3006',
+  test219: 'http://192.168.2.219:8080', // 内部服务器无法爬取，暂不使用
   mock: ''
 }
 // 环境配置，方便dev开发与build打包
-const service = process.env.NODE_ENV === 'production' ? baseUrlConfig.mock : baseUrlConfig.ljw
+const service = process.env.NODE_ENV === 'production' ? baseUrlConfig.mock : baseUrlConfig.aly
 // 文件API路径
 export const fileService = `${service}`
 // 文件访问前缀--》》 通过路径访问
